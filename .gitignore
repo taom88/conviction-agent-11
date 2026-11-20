@@ -1,0 +1,9 @@
+node_modules/
+.tools/
+dist/
+.data/
+.env*
+!.env.example
+.DS_Store
+coverage/
+artifacts/private/

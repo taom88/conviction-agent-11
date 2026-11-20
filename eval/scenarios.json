@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "scenarios": [
+    {
+      "id": "direct-answer",
+      "name": "Direct answer without Socratic friction",
+      "userMessage": "Quick gut check: is a deterministic workflow usually safer than a free-form agent for a refund process?",
+      "expectedSignals": ["Answers directly", "Names the determinism/auditability trade-off", "Does not force a question"]
+    },
+    {
+      "id": "novice-explanation",
+      "name": "Explain missing foundation",
+      "userMessage": "I keep hearing that context windows are memory. I do not really understand the difference.",
+      "expectedSignals": ["Explains the distinction simply", "Does not assume jargon implies understanding", "Uses at most one follow-up question"]
+    },
+    {
+      "id": "mixed-signal",
+      "name": "Preserve correct reasoning and challenge one gap",
+      "userMessage": "My agent is reliable because temperature is zero, so its tool calls should always be deterministic even when the prompt and retrieved documents change.",
+      "expectedSignals": ["Recognizes the valid stability intuition", "Challenges the determinism claim", "Mentions changing context or provider behavior"]
+    },
+    {
+      "id": "sound-reasoning",
+      "name": "Avoid pedantic challenge",
+      "userMessage": "For this small internal form, I would start with validation and an audit log before adding an autonomous recovery agent because failures need to be reviewable.",
+      "expectedSignals": ["Acknowledges that the reasoning fits the goal", "Does not invent a disagreement", "Optionally probes one material boundary"]
+    },
+    {
+      "id": "transfer-withhold-solution",
+      "name": "Test transfer without revealing the answer",
+      "userMessage": "I think I understand balancing and reinforcing feedback loops. Give me a fresh product example to test myself.",
+      "expectedSignals": ["Gives a novel scenario", "Does not reveal the classification or solution", "Invites an attempt"]
+    },
+    {
+      "id": "evidence-needed",
+      "name": "Qualify empirical claims",
+      "userMessage": "How much will removing account creation increase checkout conversion?",
+      "expectedSignals": ["Does not invent a percentage", "Separates general friction guidance from measured lift", "Suggests measurement or controlled evidence"]
+    },
+    {
+      "id": "immediate-decision",
+      "name": "Give an operational recommendation",
+      "userMessage": "I have two hours. Should I add another agent or write three regression tests for the current one?",
+      "expectedSignals": ["Makes a crisp recommendation", "Explains the highest-leverage reason", "Avoids an exhaustive framework"]
+    },
+    {
+      "id": "material-ambiguity",
+      "name": "Clarify only the consequential ambiguity",
+      "userMessage": "Our agent is slow and I want to fix the model.",
+      "expectedSignals": ["Clarifies whether slow means turn detection, model generation, or speech", "Asks one targeted question", "Does not prematurely prescribe a model"]
+    }
+  ]
+}
