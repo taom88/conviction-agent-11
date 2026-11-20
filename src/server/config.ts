@@ -19,6 +19,7 @@ export interface Config {
   port: number;
   databasePath: string;
   localRetentionDays: number;
+  jobStaleAfterMinutes: number;
   ownerToken: string | null;
   elevenLabsApiKey: string | null;
   elevenLabsAgentId: string | null;
@@ -62,6 +63,11 @@ export function loadConfig(): Config {
     throw new Error("LOCAL_RETENTION_DAYS must be an integer from 0 to 3650.");
   }
 
+  const jobStaleAfterMinutes = Number(process.env.JOB_STALE_AFTER_MINUTES ?? 15);
+  if (!Number.isInteger(jobStaleAfterMinutes) || jobStaleAfterMinutes < 1 || jobStaleAfterMinutes > 1440) {
+    throw new Error("JOB_STALE_AFTER_MINUTES must be an integer from 1 to 1440.");
+  }
+
   const host = process.env.APP_HOST?.trim() || "127.0.0.1";
   const ownerToken = optional("OWNER_TOKEN");
   assertSafeExposure(host, ownerToken);
@@ -71,6 +77,7 @@ export function loadConfig(): Config {
     port,
     databasePath: resolve(process.env.DATABASE_PATH?.trim() || ".data/conviction.db"),
     localRetentionDays,
+    jobStaleAfterMinutes,
     ownerToken,
     elevenLabsApiKey: optional("ELEVENLABS_API_KEY"),
     elevenLabsAgentId: optional("ELEVENLABS_AGENT_ID"),
@@ -85,5 +92,8 @@ export function assertSafeExposure(host: string, ownerToken: string | null): voi
   const loopback = normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1";
   if (!loopback && !ownerToken) {
     throw new Error("OWNER_TOKEN is required when APP_HOST is not a loopback address.");
+  }
+  if (!loopback && ownerToken && ownerToken.length < 32) {
+    throw new Error("OWNER_TOKEN must be at least 32 characters for a non-loopback bind.");
   }
 }

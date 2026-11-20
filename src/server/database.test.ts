@@ -24,6 +24,26 @@ describe("Repository feedback ingestion", () => {
     expect(repository.claimNextJob()).toBeNull();
   });
 
+  it("does not persist transcript evidence when excerpt consent is false", () => {
+    const repository = new Repository(":memory:");
+    const { record } = repository.createFeedback({
+      idempotencyKey: crypto.randomUUID(),
+      conversationId: "privacy-test",
+      responseId: "response-1",
+      responseTimestamp: new Date().toISOString(),
+      userFeedback: "Do not retain the transcript.",
+      expectedBehavior: null,
+      includeExcerpt: false,
+      evidenceMessages: [
+        { id: "response-1", role: "agent", message: "Sensitive text", timestamp: null },
+      ],
+    });
+
+    const stored = repository.getFeedbackWorkerInput(record.id);
+    expect(stored?.include_excerpt).toBe(0);
+    expect(stored?.client_evidence_json).toBeNull();
+  });
+
   it("deletes a feedback record and its queued job", () => {
     const repository = new Repository(":memory:");
     const { record } = repository.createFeedback({
@@ -60,5 +80,21 @@ describe("Repository feedback ingestion", () => {
     expect(repository.purgeExpiredFeedback(7, new Date("2026-11-20T00:00:00.000Z"))).toBe(1);
     expect(repository.getFeedback(old.id)).toBeNull();
     expect(repository.getFeedback(fresh.id)).not.toBeNull();
+  });
+
+  it("recovers an interrupted analysis after the stale threshold", () => {
+    const repository = new Repository(":memory:");
+    const { record } = repository.createFeedback({
+      idempotencyKey: crypto.randomUUID(), conversationId: "recovery", responseId: null,
+      responseTimestamp: null, userFeedback: "Retry this analysis", expectedBehavior: null,
+      includeExcerpt: false,
+    });
+    const job = repository.claimNextJob();
+    expect(job?.feedbackId).toBe(record.id);
+    repository.db.prepare("UPDATE jobs SET locked_at = ? WHERE id = ?")
+      .run("2026-11-20T10:00:00.000Z", job?.id as string);
+
+    expect(repository.recoverStaleJobs(15, new Date("2026-11-20T10:16:00.000Z"))).toBe(1);
+    expect(repository.claimNextJob()?.feedbackId).toBe(record.id);
   });
 });

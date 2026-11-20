@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
 import { ZodError } from "zod";
@@ -18,6 +17,14 @@ interface Dependencies {
   elevenLabs: ElevenLabsGateway;
   worker: ImprovementWorker;
 }
+
+const securityHeaders = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "no-referrer",
+  "permissions-policy": "microphone=(self), camera=(), geolocation=()",
+  "cross-origin-opener-policy": "same-origin",
+} as const;
 
 export function createRequestHandler(dependencies: Dependencies) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
@@ -157,7 +164,7 @@ function json(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
-    "x-content-type-options": "nosniff",
+    ...securityHeaders,
   });
   response.end(JSON.stringify(body));
 }
@@ -183,7 +190,7 @@ async function serveStatic(pathname: string, response: ServerResponse): Promise<
   response.writeHead(200, {
     "content-type": contentTypes[extname(file)] ?? "application/octet-stream",
     "cache-control": extname(file) === ".html" ? "no-store" : "public, max-age=31536000, immutable",
-    "x-content-type-options": "nosniff",
+    ...securityHeaders,
   });
   createReadStream(file).pipe(response);
 }

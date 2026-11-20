@@ -9,6 +9,7 @@ describe("server exposure policy", () => {
 
   it("requires a token for a non-loopback bind", () => {
     expect(() => assertSafeExposure("0.0.0.0", null)).toThrow(/OWNER_TOKEN/);
-    expect(() => assertSafeExposure("0.0.0.0", "secret")).not.toThrow();
+    expect(() => assertSafeExposure("0.0.0.0", "too-short")).toThrow(/32 characters/);
+    expect(() => assertSafeExposure("0.0.0.0", "a".repeat(32))).not.toThrow();
   });
 });

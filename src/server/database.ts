@@ -134,7 +134,9 @@ export class Repository {
           input.userFeedback,
           input.expectedBehavior ?? null,
           input.includeExcerpt ? 1 : 0,
-          input.evidenceMessages?.length ? JSON.stringify(input.evidenceMessages) : null,
+          input.includeExcerpt && input.evidenceMessages?.length
+            ? JSON.stringify(input.evidenceMessages)
+            : null,
           precision,
           now,
           now,
@@ -203,6 +205,37 @@ export class Repository {
       this.deleteFeedback(row.id);
     }
     return rows.length;
+  }
+
+  recoverStaleJobs(staleAfterMinutes: number, now = new Date()): number {
+    const cutoff = new Date(now.getTime() - staleAfterMinutes * 60_000).toISOString();
+    const stale = this.db
+      .prepare("SELECT id, feedback_id FROM jobs WHERE status = 'analyzing' AND locked_at <= ?")
+      .all(cutoff) as Array<{ id: string; feedback_id: string }>;
+    if (!stale.length) return 0;
+
+    const recoveredAt = now.toISOString();
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const updateJob = this.db.prepare(`
+        UPDATE jobs SET status = 'retry', locked_at = NULL,
+          last_error = 'Recovered after an interrupted worker run', updated_at = ?
+        WHERE id = ? AND status = 'analyzing'
+      `);
+      const updateFeedback = this.db.prepare(`
+        UPDATE feedback SET status = 'queued-for-retry', updated_at = ? WHERE id = ?
+      `);
+      for (const row of stale) {
+        updateJob.run(recoveredAt, row.id);
+        updateFeedback.run(recoveredAt, row.feedback_id);
+        this.audit("evaluation.recovered", "feedback", row.feedback_id, { jobId: row.id });
+      }
+      this.db.exec("COMMIT");
+      return stale.length;
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   claimNextJob(): null | { id: string; feedbackId: string; attempts: number } {

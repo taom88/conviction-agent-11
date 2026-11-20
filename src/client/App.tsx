@@ -257,6 +257,7 @@ function FeedbackDialog({
   const [feedback, setFeedback] = useState("");
   const [expected, setExpected] = useState("");
   const [recordOnly, setRecordOnly] = useState(false);
+  const [includeExcerpt, setIncludeExcerpt] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -284,8 +285,8 @@ function FeedbackDialog({
         responseTimestamp: target.timestamp,
         userFeedback: feedback,
         expectedBehavior: expected || null,
-        includeExcerpt: true,
-        evidenceMessages,
+        includeExcerpt,
+        evidenceMessages: includeExcerpt ? evidenceMessages : undefined,
       };
       try {
         await api.createFeedback(payload);
@@ -316,6 +317,7 @@ function FeedbackDialog({
         <label>What went wrong?<textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} autoFocus /></label>
         <label>What should have happened? <span>(optional)</span><textarea value={expected} onChange={(event) => setExpected(event.target.value)} /></label>
         <label className="checkbox"><input type="checkbox" checked={recordOnly} onChange={(event) => setRecordOnly(event.target.checked)} />Record only—do not send this note into the live conversation</label>
+        <label className="checkbox"><input type="checkbox" checked={includeExcerpt} onChange={(event) => setIncludeExcerpt(event.target.checked)} />Include nearby transcript turns with this feedback</label>
         {error && <p className="form-error">{error}</p>}
         <div className="dialog-actions"><button className="text-button" onClick={onClose}>Cancel</button><button className="begin-button compact-button" disabled={saving || feedback.trim().length < 3} onClick={() => void submit()}>{saving ? "Saving…" : "Save and analyze"}</button></div>
       </section>

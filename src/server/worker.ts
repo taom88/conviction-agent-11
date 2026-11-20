@@ -35,6 +35,7 @@ export class ImprovementWorker {
 
   async tick(): Promise<boolean> {
     if (this.running) return false;
+    this.repository.recoverStaleJobs(this.config.jobStaleAfterMinutes);
     const job = this.repository.claimNextJob();
     if (!job) return false;
     this.running = true;
@@ -42,9 +43,12 @@ export class ImprovementWorker {
       const feedback = this.repository.getFeedbackWorkerInput(job.feedbackId);
       if (!feedback) throw new Error("Feedback record disappeared before evaluation.");
       const conversationId = String(feedback.conversation_id);
+      const includeExcerpt = Number(feedback.include_excerpt) === 1;
       const assets = await loadEvaluationAssets();
       const providerWritable = Boolean(this.config.elevenLabsApiKey);
-      const conversation = providerWritable
+      const conversation = !includeExcerpt
+        ? { messages: [], raw: null }
+        : providerWritable
         ? await this.elevenLabs.getConversation(conversationId)
         : {
             messages: parseClientEvidence(feedback.client_evidence_json),

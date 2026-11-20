@@ -2,7 +2,7 @@
 
 Conviction is a local-first, voice-first thinking partner for AI systems, engineering architecture, systems thinking, and product design. ElevenLabs hosts the conversational agent and speech runtime. This repository owns the client experience and the feedback-driven improvement loop.
 
-This is an early prototype, not a production service. The source is suitable for external review, but each installation must supply its own ElevenLabs agent and complete its own privacy, security, and behavioral validation before deployment.
+**Deployment status: ready for a private, single-instance deployment.** It is not approved for an unrestricted public launch. Each installation must supply its own ElevenLabs agent and follow the [deployment runbook](docs/deployment.md).
 
 ## What lives where
 
@@ -90,6 +90,8 @@ npm run build          # Type-check and production web build
 npm run eval:validate  # Validate versioned rubric/scenario files
 npm start              # Serve the production build and worker
 ```
+
+The containerized private-deployment path and release gates are documented in [`docs/deployment.md`](docs/deployment.md).
 
 ## Privacy defaults
 

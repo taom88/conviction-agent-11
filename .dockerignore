@@ -1,0 +1,10 @@
+.git
+.github
+.data
+.env*
+.tools
+dist
+node_modules
+coverage
+artifacts/private
+.DS_Store
