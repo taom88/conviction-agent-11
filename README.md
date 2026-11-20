@@ -4,6 +4,8 @@ Conviction is a local-first, voice-first thinking partner for AI systems, engine
 
 **Deployment status: ready for a private, single-instance deployment.** It is not approved for an unrestricted public launch. Each installation must supply its own ElevenLabs agent and follow the [deployment runbook](docs/deployment.md).
 
+The live agent ID is deliberately not published. To recreate the agent, use the checked-in [system prompt](agent/conviction.system.md), [product documents](docs/product/README.md), and [ElevenLabs setup guide](docs/elevenlabs/SETUP.md).
+
 ## What lives where
 
 | Boundary | Owner | Responsibility |
